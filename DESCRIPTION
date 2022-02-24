@@ -1,0 +1,19 @@
+Package: woRdleBotChallenge
+Title: Wordle Bot Scorer
+Version: 0.0.0.9999
+Authors@R: 
+    person("Macey", "Rex", , email = "rex@macey.us", role = c("aut", "cre"),
+           comment = c(ORCID = "YOUR-ORCID-ID"))
+Description: Compares the performance of Wordle bots. Great way for R lovers to waste time and show off their intelligence.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.2
+Suggests: 
+    knitr,
+    dplyr, 
+    rmarkdown
+VignetteBuilder: knitr
+Depends: 
+    R (>= 2.10)
+LazyData: true

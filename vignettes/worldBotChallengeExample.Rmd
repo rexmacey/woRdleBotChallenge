@@ -1,0 +1,103 @@
+---
+title: "wordleBotChallengeExample"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{worldBotChallengeExample}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+First we load the package which comes with list over 15,000 five letter words.  Keeping this example short and easy, we'll use the 
+first 10 words as the valid word list.  You can use that or supply your own.  In the real
+Wordle the list of valid words is invisible meaning it's hidden from the players.  In this challenge, we chose to make the words visible.  This is to spare the bot maker from having to supply a word list or somehow construct words from letters. 
+```{r setup}
+library(woRdleBotChallenge)
+library(dplyr)
+data("wordList") #loads the wordList
+print(paste("# of words in the list is ", length(wordList)))
+validWordsVector <- toupper(wordList[1:10])
+validWordsVector
+```
+
+### How the Bots work
+The challenge needs a bot (or several) to make guesses.  An example is the best way to show how a bot works.  
+The first one is named 'stupidBot1'.  Its first guess will be 'ABACA' which it makes based on the
+evaluation that the response item of the first parameter (i.e., wordleEvaluatorResult$response) being NULL.  If that item is not NULL, the bot chooses a word from a vector corresponding to the length of the response item.  The subsequent guesses are "AARON", "ABACK", "AARGH", "ABADA", "AAHED", and "AALII". So this bot will always guess "ABACA", followed by those words in that order.
+
+```{r}
+stupidBot1 <- function(wordleEvaluatorResult = NULL, validWordList) {
+  if(is.null(wordleEvaluatorResult$response)) return("ABACA")
+  guesses <- c("AARON", "ABACK", "AARGH", "ABADA", "AAHED", "AALII")
+  return(guesses[length(wordleEvaluatorResult$response)])
+}
+```
+
+Below are results for this bot attempting to solve three puzzles.  For each puzzle, a list is returned with three elements: the response; the guesses the bot made; and, a score.  That's what the wordEvaluator function does.  For this example, we have a valid word list consisting of "AAHED" "AALII" "AARGH" "AARON" "ABACA" "ABACI" "ABACK" "ABADA" "ABAFF" and "ABAFT".  The word list will be discussed in greater detail in a following section. 
+
+```{r}
+
+print("Wordle puzzle 1 with the word 'AARGH'")
+wordleEvaluator(stupidBot1, "AARGH", validWordsVector)
+
+print("Wordle puzzle 2 with the word 'ABACA'")
+wordleEvaluator(stupidBot1, "ABACA", validWordsVector)
+
+print("Wordle puzzle 3 with the word 'ABAFT' which is not in the bot's list")
+wordleEvaluator(stupidBot1, "ABAFT", validWordsVector)
+```
+
+To show how this package can work with a challenge, we introduce a second bot.  'stupidBot2' is almost identical.  
+initial guess and wordlist are different. Its initial guess is "AARGH", followed by "ABADA", "ABACK", "ABACI", "AAHED", "AALII", and "AARON"
+.  
+```{r}
+stupidBot2 <- function(wordleEvaluatorResult = NULL, validWordList) {
+  if(is.null(wordleEvaluatorResult$response)) return("AARGH")
+  guesses <- c("ABADA", "ABACK", "ABACI", "AAHED", "AALII", "AARON")
+  return(guesses[length(wordleEvaluatorResult$response)])
+}
+```
+
+## How to Implement a Wordle Bot Challenge
+
+   We suggest randomly selecting some number of word, perhaps 1000, 
+and giving that list to each bot. 
+
+```{r}
+
+nWordsInChallenge <- 3
+
+set.seed(Sys.Date())
+challengeWords <- sample(validWordsVector, nWordsInChallenge, replace = FALSE)
+test1 <- sapply(challengeWords, function(x) wordleEvaluator(stupidBot1, x, wordList)$score)
+test2 <- sapply(challengeWords, function(x) wordleEvaluator(stupidBot2, x, wordList)$score)
+test1
+test2
+```
+It's clear the stupidBot1 is less stupid that stupidBot2.  But we'd compare the averages:
+```{r}
+print(paste("Average of stupidBot1's scores =", mean(test1)))
+print(paste("Average of stupidBot2's scores =", mean(test2)))
+if(mean(test1) == mean(test2)){
+  print("It's a tie!")
+} else if (mean(test1) < mean(test2)) {
+  print("stupidBot1 wins!")
+} else {
+  print("stupidBot2 wins!")
+}
+```
+
+The wordleChallenge function is designed to make computing the scores for one or more bots easy.
+```{r}
+botList1 <- c(stupidBot1 = stupidBot1, stupidBot2 = stupidBot2)
+wordleChallengeResults <- wordleChallenge(botList1, challengeWords, wordList)
+wordleChallengeResults$averageScores
+wordleChallengeResults$winner
+```
+
